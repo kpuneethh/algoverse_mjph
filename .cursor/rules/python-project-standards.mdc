@@ -1,0 +1,83 @@
+---
+alwaysApply: true
+description: Python project standards for AlgoVerse - environment, structure, coding practices, and workflow
+---
+
+# AlgoVerse Python Project Standards
+
+## Environment & Structure
+
+### Python Version & Dependencies
+- **Python Version**: Use Python 3.12 for the virtual environment
+- **Dependency Management**: Use `requirements.txt` (standard `pip install -r requirements.txt`)
+- **Environment Variables**: 
+  - Include `.env` support with a `.env.example` template
+  - Actual `.env` will be excluded via `.gitignore`
+
+### Folder Structure
+Follow this structure (flexible but adhere to the insight):
+
+```
+project_root/
+  .gitignore
+  .env.example
+  requirements.txt
+  README.md
+  src/
+    __init__.py
+    # core modules will live here
+  explore/
+    # exploratory scripts for PoC
+  tests/
+    __init__.py
+  docs/     # light for now
+```
+
+**Key Folders:**
+- `explore/` - Specifically for PoC/exploratory work, separate from core `src/`
+- `src/` - Core modules for the final experiment
+- `tests/` - Test suite (maintain even for PoC)
+- `docs/` - Light documentation
+
+**Future additions** (not required now): `experiments/`, `data/`, `logs/`
+
+## Coding & Best Practices
+
+### Style & Formatting
+- Follow **PEP 8** naming and style conventions
+- Use **black** (or similar) and **flake8** when convenient (tool setup can come later)
+- Use **type hints** (mypy compatibility) where reasonable
+
+### Documentation
+- Write **doc-strings** and comments that clarify **why** a piece of code exists (especially in research/PoC context), not just what
+- Use Python **logging** instead of raw `print()` for main flows
+
+### Code Quality
+- **Avoid magic numbers** and hard-coding of config values
+- Use variables/constants or load from `.env`
+- **Modularize code**: keep each function or module responsible for one clearly defined task
+
+### Testing
+- Write and maintain tests under `tests/` even for the PoC
+- Baseline structure should be in place from the start
+
+### Research Reproducibility
+- Log key parameters
+- Set random seeds when applicable
+- Document files and configurations
+
+## Workflow & Collaboration with Cursor
+
+### Development Process
+1. **Small chunks**: Each coding chunk will be small (e.g., "set up venv & requirements + initial folders")
+2. **Review & approve**: Before generating code, review and approve the plan for that chunk (filenames, folder structure, dependencies)
+3. **Test locally**: After the chunk is implemented, test locally; if fixes are needed, iterate before moving on
+4. **Small commits**: All code is committed in small units with clear commit messages (e.g., "Initialize project scaffold for PoC")
+
+### Communication
+- Ask follow-up questions if anything is ambiguous
+- These rules apply to both the PoC/explore work and the future full-experiment codebase
+- Maintain a unified, maintainable foundation
+
+## Summary
+These standards ensure consistency, reproducibility, and maintainability throughout the project lifecycle, from exploratory PoC work to full experiments.
