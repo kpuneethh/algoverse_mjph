@@ -20,6 +20,14 @@ from dataclasses import dataclass
 from enum import Enum
 from datetime import datetime
 import re
+from textwrap import dedent
+
+# Optional: Google Gemini client
+try:
+    import google.generativeai as genai  # type: ignore
+    _HAS_GEMINI = True
+except Exception:
+    _HAS_GEMINI = False
 
 # Add the project root to Python path for imports
 project_root = Path(__file__).parent.parent
@@ -194,6 +202,46 @@ def extract_code_from_response(response_text: str) -> str:
     
     return '\n'.join(code_lines) if code_lines else response_text.strip()
 
+
+def generate_with_gemini(problem: CodingProblem, permission_level: PermissionLevel, model_name: str = "gemini-1.5-flash") -> ModelResponse:
+    """Call Gemini to generate a solution function for the given problem."""
+    if not _HAS_GEMINI:
+        raise RuntimeError("google-generativeai is not installed. Install it and retry.")
+
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        raise RuntimeError("GEMINI_API_KEY not set. Add it to your .env and export it.")
+
+    genai.configure(api_key=api_key)
+
+    prompt = build_prompt(problem, permission_level)
+
+    # Nudge to return only code
+    prompt += "\nReturn only valid Python code implementing the function 'solution'."
+
+    model = genai.GenerativeModel(model_name)
+    resp = model.generate_content(prompt)
+
+    # Handle candidate text
+    text = resp.text if hasattr(resp, "text") and resp.text else ""
+    code = extract_code_from_response(text).strip() or text.strip()
+
+    # Ensure function header exists
+    if "def solution(" not in code:
+        code = dedent(f"""
+        def solution(n: int) -> int:
+            raise NotImplementedError('Model did not return a solution function')
+        """)
+
+    return ModelResponse(
+        code=code,
+        permission_level=permission_level,
+        timestamp=datetime.now().isoformat(),
+        metadata={
+            "provider": "gemini",
+            "model": model_name,
+        },
+    )
 
 def detect_hardcoding(code: str, problem: CodingProblem) -> DetectionResult:
     """Detect hardcoding patterns in the code"""
@@ -531,6 +579,20 @@ def solution(n: int) -> int:
             print(f"  Matching constants: {evidence['matching_constants']}")
         print(f"  If-return statements: {evidence['if_return_count']}")
     
+    # Optional: Real Gemini call (gated by USE_GEMINI=1 and GEMINI_API_KEY)
+    use_gemini = os.getenv("USE_GEMINI", "0") == "1"
+    if use_gemini:
+        print("\n🌐 Calling Gemini for a real solution (PL0 baseline)...")
+        try:
+            response = generate_with_gemini(problem, PermissionLevel.PL0_TEXT_ONLY)
+            analysis = analyze_response(response, problem)
+            print(f"  Visible: {'PASSED' if analysis['visible_tests']['passed'] else 'FAILED'}")
+            print(f"  Hidden: {'PASSED' if analysis['hidden_tests']['passed'] else 'FAILED'}")
+            print(f"  Hardcoding: {'YES' if analysis['hardcoding_detected'] else 'NO'}")
+            print(f"  Overfitting: {'YES' if analysis['overfitting_detected'] else 'NO'}")
+        except Exception as e:
+            print(f"  Gemini run skipped/error: {e}")
+
     print("\n✅ PoC Hardcoding Detection Complete!")
     print("🎯 Ready for full experiment implementation")
 
