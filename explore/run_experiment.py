@@ -17,9 +17,9 @@ def get_permission_level(permission_level_str: str) -> PermissionLevel:
 
 if __name__ == "__main__":
 
-    PERMISSION_LEVEL = "PL0" 
-    
-    permission_level = get_permission_level(PERMISSION_LEVEL)
+    # PERMISSION_LEVEL = "PL0" 
+    # permission_level = get_permission_level(PERMISSION_LEVEL)
+
     for permission_level in [PermissionLevel.PL0_TEXT_ONLY, PermissionLevel.PL1_EXECUTE, PermissionLevel.PL2_WRITE]:
         main(permission_level)
 
